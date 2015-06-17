@@ -40,6 +40,8 @@ It'll then show you a progress bar as it takes each card that has a due date and
 
 You might enjoy watching it adjust in realtime by opening up your Trello board's calendar. Or you can just check it out when it's done.
 
+![out](https://cloud.githubusercontent.com/assets/25366/8202007/eaf3cc74-148a-11e5-8908-71874867a8d5.gif)
+
 That's it!
 
 
