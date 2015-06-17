@@ -49,6 +49,6 @@ That's it!
 #### Important Current Caveats
 
 - Currently, **this only works correctly if a cohort starts on a Monday**. That may prove to be a pretty obnoxious bug. We can try to come up with a way to fix it when we have to cross that bridge.
-- As far as it seems, **you have to let it finish once you start it**, or else your dates might not line up. This isn't tested, but it does it's adjustments based on when the first card is, so if the first card is out of sync with the other cards, it'll stay wonky.
+- As far as it seems, **you have to let it finish once you start it**, or else your dates might not line up. This isn't tested, but it does adjustments based on the difference between the date you input and the date on the first card, so if the first card is out of sync with the other cards, it'll stay wonky.
 
 Still, it's better than doing it by hand.
