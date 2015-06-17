@@ -46,7 +46,7 @@ That's it!
 - - -
 
 
-#### A Few Current Caveats
+#### An Important Current Caveat
 
 - Currently, **this only works correctly if a cohort starts on a Monday**. That may prove to be a pretty obnoxious bug. We can try to come up with a way to fix it when we have to cross that bridge.
 
