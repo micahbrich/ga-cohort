@@ -41,3 +41,15 @@ It'll then show you a progress bar as it takes each card that has a due date and
 You might enjoy watching it adjust in realtime by opening up your Trello board's calendar. Or you can just check it out when it's done.
 
 That's it!
+
+
+- - -
+
+
+#### A Few Current Caveats
+
+- As far as I know, **this only works for cohorts that are starting at a date _later_ than the Baseline**. I don't think it'll successfully move a cohort's cards back in time, only forward.
+
+- Currently, **this only works correctly if a cohort starts on a Monday**. That may prove to be a pretty obnoxious bug. We can try to come up with a way to fix it when we have to cross that bridge.
+
+Still, it's better than doing it by hand.
