@@ -1,0 +1,120 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'commander/import'
+require 'yaml'
+require 'date'
+require 'trello'
+
+
+`cp config-sample.yml config.yml` unless File.file?('./config.yml') 
+raw_config = File.read("config.yml")
+CONFIG = YAML.load(raw_config)
+
+
+program :version, '0.0.1'
+program :description, 'A tiny little app to get your planning Trello ready to go.'
+program :help_formatter, :compact
+default_command :start
+
+command :config do |c|
+  c.syntax = 'GA Cohort Commander config'
+  c.summary = 'Set up your Trello API credentials'
+  c.description = "This will authorize with your Trello account so we can read/write your new cohort's board"
+  # c.example 'description', 'command example'
+  # c.option '--some-switch', 'Some switch that does something'
+  c.action do |args, options|
+
+
+    unless CONFIG['trello']['key']
+      ask "Hit enter to open up Trello's API key page – we'll need it in a second"
+      system "open https://www.trello.com/app-key"
+    end
+    
+    CONFIG['trello']['key'] ||= ask("What's your API key? ")
+    CONFIG['trello']['secret'] ||= ask("What's your API secret? ")
+    
+    unless CONFIG['trello']['token']
+      auth_url = "https://trello.com/1/authorize?response_type=token&expiration=never&scope=read,write&name=GA%20Trello&key=#{CONFIG['trello']['key']}"
+      if ask "Now we're gonna open up an OAuth dialog, hit allow if you want to continue. Copy the token it gives you when you accept! \nHit enter to go."
+        system("open", auth_url)
+        CONFIG['trello']['token'] = ask("What's the authorization token it gave you? ")
+      end
+    end
+
+    File.open("config.yml", "w") do |file|
+      file.write CONFIG.to_yaml
+    end
+
+    configure
+    puts "*You* are all set up! Use `cohort start` to get started!"
+
+  end
+end
+
+command :start do |c|
+  c.syntax = 'GA Cohort Commander start [options]'
+  c.summary = 'Start your Trello planning board'
+  c.description = 'This will take an ID of a Trello board and adjust all the dates to match when your cohort starts'
+  # c.example 'description', 'command example'
+  c.option '--url "https://trello/b/fijo3"', 'Your Trello board URL'
+  c.option '--start "Jun 29"', 'The date your cohort starts'
+  c.action do |args, options|
+    # Do something or c.when_called Ga cohort commander::Commands::Start
+
+    configure
+
+  
+    start = options.start || ask("When does your cohort start? ", Date)
+    options.start = Date.parse(start.to_s)
+
+    url = options.url || ask("What's the URL of your Trello planning board?", String)
+    id = url.match(/https\:\/\/trello\.com\/b\/([a-zA-Z0-9]+)/)[1]
+
+    update_board(id, options.start)
+
+  end
+end
+
+
+# This just makes sure Trello is all set up once the config.yml is working
+def configure
+  if CONFIG['trello']['token']
+    Trello.configure do |config|
+      config.developer_public_key = CONFIG['trello']['key']
+      config.member_token = CONFIG['trello']['token']
+    end
+  else
+    puts "Oh, you need to set up your Trello credentials first. Run `cohort config`!"
+  end
+end
+
+# This command takes an ID & start date, and then goes through each card in each list 
+# to update any cards with due dates to be the appropriate amount of days after the start date
+def update_board(board_ID, start_date)
+  board = Trello::Board.find(board_ID)
+
+  # Calculate the difference in days between the Baseline start date & the new board's start date
+  board_start_date = board.lists[1].cards[1].due.to_date
+  difference_in_days = (start_date.mjd - board_start_date.mjd) + 1
+
+  # In reverse order, go through each list, and each card in each list, and update the date for that card.
+  board.lists.reverse.each do |list|
+
+    # Each list outputs to the terminal so you can watch it working
+    puts list.name 
+    
+    list.cards.each do |card|
+      
+      # This only applies to cards with due dates
+      if card.due
+        card_start_date = card.due.to_date
+        card_new_start_date = card_start_date + difference_in_days
+        card.due = card_new_start_date
+      end
+
+      puts card.save ? "    #{card.name}" : "crap, error"
+    end
+  end
+
+end
