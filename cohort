@@ -99,22 +99,18 @@ def update_board(board_ID, start_date)
   difference_in_days = (start_date.mjd - board_start_date.mjd) + 1
 
   # In reverse order, go through each list, and each card in each list, and update the date for that card.
-  board.lists.reverse.each do |list|
-
-    # Each list outputs to the terminal so you can watch it working
-    puts list.name 
-    
-    list.cards.each do |card|
-      
-      # This only applies to cards with due dates
-      if card.due
-        card_start_date = card.due.to_date
-        card_new_start_date = card_start_date + difference_in_days
-        card.due = card_new_start_date
-      end
-
-      puts card.save ? "    #{card.name}" : "crap, error"
-    end
+  progress board.cards, format: "Updating |:progress_bar| :percent_complete% complete  :title" do |card|
+    update_card card, difference_in_days
+    { :title => "#{card.list.name} - #{card.name}" }
   end
+  
+end
 
+def update_card(card, difference_in_days = 0)
+  if card.due
+    card_start_date = card.due.to_date
+    card_new_start_date = card_start_date + difference_in_days
+    card.due = card_new_start_date
+  end
+  card.save
 end
