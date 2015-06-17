@@ -1,21 +1,32 @@
 #!/usr/bin/env ruby
 
 require 'rubygems'
-require 'commander/import'
 require 'yaml'
 require 'date'
-require 'trello'
 
 
-`cp config-sample.yml config.yml` unless File.file?('./config.yml') 
-raw_config = File.read("config.yml")
+begin
+  require 'commander/import'
+rescue LoadError
+  `gem install commander`
+end
+
+begin
+  require 'trello'
+rescue LoadError
+  `gem install ruby-trello`
+end
+
+config_file = File.expand_path '~/.ga-cohort.yml'
+`cp config-sample.yml ~/.ga-cohort.yml` unless File.file?(config_file) 
+raw_config = File.read(config_file)
 CONFIG = YAML.load(raw_config)
 
 
 program :version, '0.0.1'
 program :description, 'A tiny little app to get your planning Trello ready to go.'
 program :help_formatter, :compact
-default_command :start
+default_command :config
 
 command :config do |c|
   c.syntax = 'GA Cohort Commander config'
@@ -25,29 +36,33 @@ command :config do |c|
   # c.option '--some-switch', 'Some switch that does something'
   c.action do |args, options|
 
+    if configure
+      puts "*You* are all set up! Use `cohort start` to get started!"
+    else
 
-    unless CONFIG['trello']['key']
-      ask "Hit enter to open up Trello's API key page – we'll need it in a second"
-      system "open https://www.trello.com/app-key"
-    end
-    
-    CONFIG['trello']['key'] ||= ask("What's your API key? ")
-    CONFIG['trello']['secret'] ||= ask("What's your API secret? ")
-    
-    unless CONFIG['trello']['token']
-      auth_url = "https://trello.com/1/authorize?response_type=token&expiration=never&scope=read,write&name=GA%20Trello&key=#{CONFIG['trello']['key']}"
-      if ask "Now we're gonna open up an OAuth dialog, hit allow if you want to continue. Copy the token it gives you when you accept! \nHit enter to go."
-        system("open", auth_url)
-        CONFIG['trello']['token'] = ask("What's the authorization token it gave you? ")
+      unless CONFIG['trello']['key']
+        ask "Hit enter to open up Trello's API key page. You'll need to copy & paste a few tokens for us to set up."
+        system "open https://www.trello.com/app-key"
       end
-    end
+      
+      CONFIG['trello']['key'] ||= ask("What's your API key? ")
+      CONFIG['trello']['secret'] ||= ask("What's your API secret? ")
+      
+      unless CONFIG['trello']['token']
+        auth_url = "https://trello.com/1/authorize?response_type=token&expiration=never&scope=read,write&name=GA%20Trello&key=#{CONFIG['trello']['key']}"
+        if ask "Now we're gonna open up an OAuth dialog, hit allow if you want to continue. Copy the token it gives you when you accept! \nHit enter to go."
+          system("open", auth_url)
+          CONFIG['trello']['token'] = ask("What's the authorization token it gave you? ")
+        end
+      end
 
-    File.open("config.yml", "w") do |file|
-      file.write CONFIG.to_yaml
-    end
+      File.open(config_file, "w") do |file|
+        file.write CONFIG.to_yaml
+      end
 
-    configure
-    puts "*You* are all set up! Use `cohort start` to get started!"
+      configure
+
+    end
 
   end
 end
@@ -62,16 +77,18 @@ command :start do |c|
   c.action do |args, options|
     # Do something or c.when_called Ga cohort commander::Commands::Start
 
-    configure
+    if configure
 
   
-    start = options.start || ask("When does your cohort start? ", Date)
-    options.start = Date.parse(start.to_s)
+      start = options.start || ask("When does your cohort start? ", Date)
+      options.start = Date.parse(start.to_s)
 
-    url = options.url || ask("What's the URL of your Trello planning board?", String)
-    id = url.match(/https\:\/\/trello\.com\/b\/([a-zA-Z0-9]+)/)[1]
+      url = options.url || ask("What's the URL of your Trello planning board?", String)
+      id = url.match(/https\:\/\/trello\.com\/b\/([a-zA-Z0-9]+)/)[1]
 
-    update_board(id, options.start)
+      update_board(id, options.start)
+
+    end
 
   end
 end
@@ -79,13 +96,15 @@ end
 
 # This just makes sure Trello is all set up once the config.yml is working
 def configure
-  if CONFIG['trello']['token']
+  if CONFIG['trello']['token'] != nil
     Trello.configure do |config|
       config.developer_public_key = CONFIG['trello']['key']
       config.member_token = CONFIG['trello']['token']
     end
+    return true
   else
-    puts "Oh, you need to set up your Trello credentials first. Run `cohort config`!"
+    puts "Oh, you need to set up your Trello credentials first. Let's set you up."
+    return false
   end
 end
 
