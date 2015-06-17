@@ -37,7 +37,8 @@ command :config do |c|
   c.action do |args, options|
 
     if configure
-      puts "*You* are all set up! Use `cohort start` to get started!"
+      system('cohort adjust')
+      # puts "*You* are all set up! Use `cohort adjust` to get started!"
     else
 
       unless CONFIG['trello']['key']
@@ -67,13 +68,13 @@ command :config do |c|
   end
 end
 
-command :start do |c|
+command :adjust do |c|
   c.syntax = 'GA Cohort Commander start [options]'
   c.summary = 'Start your Trello planning board'
   c.description = 'This will take an ID of a Trello board and adjust all the dates to match when your cohort starts'
   # c.example 'description', 'command example'
   c.option '--url "https://trello/b/fijo3"', 'Your Trello board URL'
-  c.option '--start "Jun 29"', 'The date your cohort starts'
+  c.option '--start "Jun 29"', 'Set the date your cohort starts'
   c.action do |args, options|
     # Do something or c.when_called Ga cohort commander::Commands::Start
 
