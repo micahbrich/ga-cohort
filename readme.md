@@ -25,13 +25,13 @@ That'll give you some prompts and save your credentials so it'll work next time 
 Once you're all done, it'll tell you the real command:
 
 ```
-$ cohort start
+$ cohort adjust
 ```
 
 Running that without any arguments will prompt you for the details it needs. You could alternatively run it with some parameters:
 
 ```
-$ cohort start --url="https://trello.com/b/wNkMpmFX/wdi-fake-8" --start="Jun 29"
+$ cohort adjust --url="https://trello.com/b/wNkMpmFX/wdi-fake-8" --start="Jun 29"
 ```
 
 Either will get you going. 
