@@ -23,7 +23,7 @@ raw_config = File.read(config_file)
 CONFIG = YAML.load(raw_config)
 
 
-program :version, '0.0.1'
+program :version, '0.0.2'
 program :description, 'A tiny little app to get your planning Trello ready to go.'
 program :help_formatter, :compact
 default_command :config
